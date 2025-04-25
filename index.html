@@ -18,11 +18,11 @@
       }
       #counter {
         position: absolute;
-        top: 20px;
+        top: 75px;
         left: 0;
         right: 0;
         color: #fff;
-        font-size: 32px;
+        font-size: 100px;
         z-index: 100;
         text-shadow: 0 0 5px #000;
         text-align: center;
@@ -55,7 +55,7 @@
   </head>
   <body>
     <div id="game-container">
-      <div id="counter">Steps: 0</div>
+      <div id="counter">0</div>
       <div id="milestone"></div>
       <div id="instructions" class="instructions">
         Use arrow keys or WASD to climb
@@ -334,8 +334,7 @@
         isMoving = true;
 
         currentStep++;
-        document.getElementById("counter").textContent =
-          `Steps: ${currentStep}`;
+        document.getElementById("counter").textContent = `${currentStep}`;
 
         // MODIFIED: Change player color every 100 steps instead of every step
         if (currentStep % 100 === 0) {
