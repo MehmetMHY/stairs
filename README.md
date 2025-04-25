@@ -1,10 +1,8 @@
-# Stairs Game
+<div align="center">
+  <h1>Stairs</h1>
+  <img src="./icon.png" width="300"/>
+</div>
 
-## About
+A game were you walk up stairs, steps by steps, until you give up...
 
-A game were you walk up stair steps until you don't...
-
-## Credits
-
-- [Games that Don't Fake the Space](https://www.youtube.com/watch?v=Q85l1Fenc5w)
-- [Claude](https://claude.ai/chats)
+This game was inspired by the video, [Games that Don't Fake the Space](https://www.youtube.com/watch?v=Q85l1Fenc5w).
