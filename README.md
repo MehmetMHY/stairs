@@ -1,9 +1,7 @@
 <div align="center">
-  <h1>Stairs</h1>
   <img src="./icon.png" width="300"/>
+  <h1>Stairs</h1>
 </div>
-
-<div style="height: 25px;"></div>
 
 A game were you walk up stairs, steps by steps, until you give up...
 
