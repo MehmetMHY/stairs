@@ -332,6 +332,8 @@
             muteButton.addEventListener('click', () => {
                 backgroundMusic.muted = !backgroundMusic.muted;
                 muteButton.textContent = backgroundMusic.muted ? 'Unmute' : 'Mute';
+                // Save state to localStorage
+                localStorage.setItem('isMuted', backgroundMusic.muted ? 'true' : 'false');
             });
         }
         
@@ -340,6 +342,18 @@
             restartButton.addEventListener('click', () => {
                 window.location.reload();
             });
+        }
+        
+        // Apply stored mute state
+        const storedMuteState = localStorage.getItem('isMuted');
+        if (backgroundMusic) {
+            if (storedMuteState === 'true') {
+                backgroundMusic.muted = true;
+                muteButton.textContent = 'Unmute';
+            } else {
+                backgroundMusic.muted = false;
+                muteButton.textContent = 'Mute';
+            }
         }
 
         // Start animation loop
