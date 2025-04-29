@@ -26,6 +26,8 @@
         z-index: 100;
         text-shadow: 0 0 5px #000;
         text-align: center;
+        opacity: 0;
+        transition: opacity 1s;
       }
       #milestone {
         position: absolute;
@@ -51,10 +53,25 @@
         text-align: center;
         transition: opacity 1s;
       }
+      #game-title {
+        position: absolute;
+        top: 100px;
+        left: 0;
+        right: 0;
+        color: #fff;
+        font-size: 120px;
+        font-weight: bold;
+        z-index: 100;
+        text-shadow: 0 0 15px #8a2be2;
+        text-align: center;
+        letter-spacing: 8px;
+        transition: opacity 0s;
+      }
     </style>
   </head>
   <body>
     <div id="game-container">
+      <div id="game-title">STAIRS</div>
       <div id="counter">0</div>
       <div id="milestone"></div>
       <div id="instructions" class="instructions">
@@ -311,6 +328,9 @@
         if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
           if (!hasStartedMoving) {
             hasStartedMoving = true;
+            // Hide title and show game UI
+            document.getElementById("game-title").style.display = "none";
+            document.getElementById("counter").style.opacity = 1;
             // Hide instructions
             document.getElementById("instructions").style.opacity = 0;
           }
@@ -331,6 +351,7 @@
       // Move player up the stairs
       function moveUp() {
         if (isMoving) return;
+        
         isMoving = true;
 
         currentStep++;
