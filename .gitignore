@@ -41,8 +41,5 @@ next-env.d.ts
 # custom
 venv/
 env/
-.env
-.env*
 code_dump_*.txt
-*.zip
 export_*
