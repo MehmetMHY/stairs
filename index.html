@@ -27,7 +27,10 @@
         text-shadow: 0 0 5px #000;
         text-align: center;
         opacity: 0;
-        transition: opacity 1s;
+        transition: opacity 1s, text-shadow 0.3s ease-out;
+      }
+      .counter-glow {
+        text-shadow: 0 0 25px #ffc107, 0 0 10px #fff; /* Glowing effect */
       }
       #milestone {
         position: absolute;
@@ -178,6 +181,7 @@
         document.getElementById("game-title").style.display = "block";
         document.getElementById("counter").style.opacity = "0";
         document.getElementById("counter").textContent = "0";
+        document.getElementById("counter").classList.remove('counter-glow'); // Ensure glow is off on reset
 
         // Create scene
         scene = new THREE.Scene();
@@ -253,6 +257,11 @@
 
         // Create initial stairs
         createInitialStairs();
+
+        // Create more initial floating objects (Reverted to original amount)
+        for (let i = 0; i < 100; i++) {
+          createFloatingObject();
+        }
 
         // Add event listeners
         window.addEventListener("resize", onWindowResize);
@@ -544,25 +553,25 @@
         currentStep++;
         document.getElementById("counter").textContent = `${currentStep}`;
 
-        // MODIFIED: Change player color every 100 steps instead of every step
+        // Handle 100 step milestone
         if (currentStep % 100 === 0) {
           player.material.color.setHex(getRandomColor());
 
-          // Show a small notification for color change
-          const milestoneDiv = document.getElementById("milestone");
-          milestoneDiv.textContent = `${currentStep}`;
-          milestoneDiv.style.opacity = 0.7;
+          // Apply glow effect to counter
+          const counterDiv = document.getElementById("counter");
+          counterDiv.classList.add('counter-glow');
 
+          // Remove glow after a short time
           setTimeout(() => {
-            milestoneDiv.style.opacity = 0;
+            counterDiv.classList.remove('counter-glow');
           }, 1500);
         }
 
         // Create new stairs as needed
         createStair(currentStep + 9);
 
-        // Create new floating objects as we climb (Doubled)
-        for (let i = 0; i < 10; i++) {
+        // Create new floating objects as we climb (Reverted to original amount)
+        for (let i = 0; i < 5; i++) {
           createFloatingObject();
         }
 
@@ -591,9 +600,9 @@
         const targetY = player.position.y + 0.2;
         const targetZ = player.position.z - 0.5;
 
-        // Check if we're reaching a milestone
-        if (currentStep % 500 === 0) {
-          showMilestone(currentStep);
+        // Check if we're reaching a 500 step milestone (for separate visual cue if needed)
+        if (currentStep > 0 && currentStep % 500 === 0) {
+          showMajorMilestone(currentStep);
         }
 
         // Smooth animation
@@ -644,15 +653,11 @@
         );
       }
 
-      // Show milestone message
-      function showMilestone(step) {
-        const milestoneDiv = document.getElementById("milestone");
-        milestoneDiv.textContent = `${step} STEPS`;
-        milestoneDiv.style.opacity = 1;
-
-        setTimeout(() => {
-          milestoneDiv.style.opacity = 0;
-        }, 3000);
+      // Show major milestone message (optional, e.g., for 500 steps)
+      function showMajorMilestone(step) {
+        // You could potentially reuse the #milestone div here if desired
+        // Or create a different effect for larger milestones
+        console.log(`Reached major milestone: ${step} steps!`);
       }
 
       // Update moving stairs
