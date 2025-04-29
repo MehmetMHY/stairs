@@ -345,6 +345,9 @@
         // Add event listeners
         window.addEventListener("resize", onWindowResize);
         document.addEventListener("keydown", onKeyDown);
+        document
+          .getElementById("game-container")
+          .addEventListener("touchstart", onTouchStart); // Add touch listener
 
         // Header controls event listeners
         const muteButton = document.getElementById("mute-button");
@@ -381,6 +384,52 @@
 
         // Start animation loop
         animate();
+      }
+
+      // Handle touch input for mobile
+      function onTouchStart(event) {
+        // Prevent default touch behavior like scrolling
+        event.preventDefault();
+
+        if (isGameOver) {
+          // Optional: Could trigger reload on tap when game over
+          // window.location.reload();
+          return;
+        }
+
+        if (isMoving || isFalling) return;
+
+        // Get the Y coordinate of the first touch
+        const touchY = event.touches[0].clientY;
+        const screenHeight = window.innerHeight;
+
+        // Check if the tap is in the lower half of the screen
+        if (touchY > screenHeight / 2) {
+          if (!hasStartedMoving) {
+            hasStartedMoving = true;
+            // Hide title and show game UI
+            document.getElementById("game-title").style.display = "none";
+            document.getElementById("counter").style.opacity = 1;
+            // Hide instructions
+            document.getElementById("instructions").style.opacity = 0;
+
+            // Attempt to play background music again on first interaction (if not already playing)
+            if (backgroundMusic && !musicPlaying) {
+              try {
+                backgroundMusic.play();
+                musicPlaying = true;
+                console.log("Background music started via interaction.");
+              } catch (error) {
+                console.error(
+                  "Could not play background music via interaction:",
+                  error,
+                );
+                musicPlaying = false; // Ensure flag is correct if play fails
+              }
+            }
+          }
+          moveUp();
+        }
       }
 
       // Create initial set of stairs
