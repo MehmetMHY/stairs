@@ -254,11 +254,6 @@
         // Create initial stairs
         createInitialStairs();
 
-        // Create more initial floating objects
-        for (let i = 0; i < 100; i++) {
-          createFloatingObject();
-        }
-
         // Add event listeners
         window.addEventListener("resize", onWindowResize);
         document.addEventListener("keydown", onKeyDown);
@@ -288,7 +283,10 @@
         
         const isMovingStair = potentialMoving;
         
-        const stairGeometry = new THREE.BoxGeometry(1, 0.15, 0.5);
+        // Determine stair width
+        const stairWidth = isMovingStair ? 2 : 1;
+        
+        const stairGeometry = new THREE.BoxGeometry(stairWidth, 0.15, 0.5);
 
         // Different color for different types of stairs
         let stairMaterial;
@@ -318,8 +316,8 @@
         // For moving stairs, add movement properties
         if (isMovingStair) {
           stair.userData.isMoving = true;
-          // Ensure consistently fast speed (range 0.375 to 0.625)
-          stair.userData.moveSpeed = (Math.random() * 0.25 + 0.375) * (Math.random() < 0.5 ? 1 : -1); 
+          // Speed doubled again (range 0.75 to 1.25)
+          stair.userData.moveSpeed = (Math.random() * 0.5 + 0.75) * (Math.random() < 0.5 ? 1 : -1); 
           stair.userData.moveRange = Math.random() * 2.0 + 1.5; // Range of 1.5 to 3.5 units
           stair.userData.originalX = stair.position.x;
           stair.userData.timeOffset = Math.random() * Math.PI * 2; // Random starting position in the cycle
@@ -454,15 +452,17 @@
         const playerX = player.position.x;
         
         let isSupported = false;
+        let supportingStair = null;
         
         // Find the stair closest to the player's expected Y level
         for (const stair of stairs) {
           // Check if this stair is at the right height (within a small threshold)
           if (Math.abs(stair.position.y - expectedStairY) < 0.05) {
-            // Check if the player is above this stair horizontally (stair width = 1)
-            // Use 0.5 as half the stair width for check
-            if (Math.abs(playerX - stair.position.x) <= 0.5) {
+            // Check if the player is above this stair horizontally (stair width = 1 or 2)
+            const halfWidth = stair.geometry.parameters.width / 2;
+            if (Math.abs(playerX - stair.position.x) <= halfWidth) {
               isSupported = true;
+              supportingStair = stair; // Store the supporting stair
               break;
             }
           }
@@ -561,8 +561,8 @@
         // Create new stairs as needed
         createStair(currentStep + 9);
 
-        // Create new floating objects as we climb
-        for (let i = 0; i < 5; i++) {
+        // Create new floating objects as we climb (Doubled)
+        for (let i = 0; i < 10; i++) {
           createFloatingObject();
         }
 
@@ -574,13 +574,15 @@
         if (nextStair && nextStair.userData.isMoving) {
           // Calculate distance between player and stair in X axis
           const distanceX = Math.abs(player.position.x - nextStair.position.x);
+          const halfWidth = nextStair.geometry.parameters.width / 2;
           
           // If player is not aligned with the moving stair, game over
-          // Check against half the stair width (0.5)
-          if (distanceX > 0.5) { 
-            console.log(`Missed moving stair! Player X: ${player.position.x.toFixed(2)}, Stair X: ${nextStair.position.x.toFixed(2)}, Distance: ${distanceX.toFixed(2)}`);
-            gameOver();
-            isMoving = false; // Stop the moveUp animation
+          if (distanceX > halfWidth) { 
+            console.log(`Missed moving stair! Player X: ${player.position.x.toFixed(2)}, Stair X: ${nextStair.position.x.toFixed(2)}, HalfWidth: ${halfWidth.toFixed(2)}, Distance: ${distanceX.toFixed(2)}`);
+            // Initiate fall from the missed step height
+            player.position.y = currentStep * 0.2 + 0.4;
+            startFalling();
+            isMoving = false; // Stop the moveUp process
             return;
           }
         }
