@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infinite Stairway</title>
-    <link rel="icon" type="image/png" href="./icon.png">
+    <link rel="icon" type="image/png" href="./icon.png" />
     <style>
       body {
         margin: 0;
@@ -28,10 +28,14 @@
         text-shadow: 0 0 5px #000;
         text-align: center;
         opacity: 0;
-        transition: opacity 1s, text-shadow 0.3s ease-out;
+        transition:
+          opacity 1s,
+          text-shadow 0.3s ease-out;
       }
       .counter-glow {
-        text-shadow: 0 0 25px #ffc107, 0 0 10px #fff; /* Glowing effect */
+        text-shadow:
+          0 0 25px #ffc107,
+          0 0 10px #fff; /* Glowing effect */
       }
       #milestone {
         position: absolute;
@@ -116,7 +120,9 @@
         border-radius: 5px;
         cursor: pointer;
         text-decoration: none; /* For the link button */
-        transition: background-color 0.2s, border-color 0.2s;
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
       }
       .control-button:hover {
         background-color: rgba(0, 0, 0, 0.6);
@@ -129,7 +135,13 @@
       <div id="header-controls">
         <button id="mute-button" class="control-button">Mute</button>
         <button id="restart-button" class="control-button">Restart</button>
-        <a href="https://github.com/MehmetMHY/stairs" target="_blank" id="code-button" class="control-button">Code</a>
+        <a
+          href="https://github.com/MehmetMHY/stairs"
+          target="_blank"
+          id="code-button"
+          class="control-button"
+          >Code</a
+        >
       </div>
       <div id="game-title">STAIRS</div>
       <div id="counter">0</div>
@@ -146,7 +158,8 @@
       // Game variables
       let currentStep = 0;
       let camera, scene, renderer;
-      let player, stairs = [];
+      let player,
+        stairs = [];
       let isMoving = false;
       let sun;
       let floatingObjects = [];
@@ -159,7 +172,7 @@
       let lastStairWasMoving = false; // Track if the previous stair was moving
       let backgroundMusic = null; // Variable for background music
       let musicPlaying = false; // Track if music is currently intended to play
-      
+
       // Handle keyboard input
       function onKeyDown(event) {
         if (isGameOver) {
@@ -169,7 +182,7 @@
             return;
           }
         }
-        
+
         if (isMoving || isFalling) return;
 
         if (event.key === "ArrowUp" || event.key === "w" || event.key === "W") {
@@ -180,7 +193,7 @@
             document.getElementById("counter").style.opacity = 1;
             // Hide instructions
             document.getElementById("instructions").style.opacity = 0;
-            
+
             // Attempt to play background music again on first interaction (if not already playing)
             if (backgroundMusic && !musicPlaying) {
               try {
@@ -188,7 +201,10 @@
                 musicPlaying = true;
                 console.log("Background music started via interaction.");
               } catch (error) {
-                console.error("Could not play background music via interaction:", error);
+                console.error(
+                  "Could not play background music via interaction:",
+                  error,
+                );
                 musicPlaying = false; // Ensure flag is correct if play fails
               }
             }
@@ -209,22 +225,22 @@
         fallSpeed = 0;
         lastStairWasMoving = false;
         musicPlaying = false; // Reset music playing state
-        
+
         // Cancel any existing animation frame
         if (animationId !== null) {
           cancelAnimationFrame(animationId);
         }
-        
+
         // Hide game over UI
         document.getElementById("game-over").style.opacity = "0";
         document.getElementById("restart-message").style.opacity = "0";
-        
+
         // Show instructions and title if starting fresh
         document.getElementById("instructions").style.opacity = "1";
         document.getElementById("game-title").style.display = "block";
         document.getElementById("counter").style.opacity = "0";
         document.getElementById("counter").textContent = "0";
-        document.getElementById("counter").classList.remove('counter-glow'); // Ensure glow is off on reset
+        document.getElementById("counter").classList.remove("counter-glow"); // Ensure glow is off on reset
 
         // Create scene
         scene = new THREE.Scene();
@@ -244,7 +260,7 @@
         renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setClearColor(0x000000);
-        
+
         // Clear previous canvas if exists
         const container = document.getElementById("game-container");
         if (container.querySelector("canvas")) {
@@ -305,56 +321,62 @@
         for (let i = 0; i < 100; i++) {
           createFloatingObject();
         }
-        
+
         // Initialize background music
         try {
-            backgroundMusic = new Audio('./music.mp3');
-            backgroundMusic.loop = true;
-            // Attempt to play music immediately (might be blocked by browser)
-            backgroundMusic.play().then(() => {
-                musicPlaying = true;
-                console.log("Background music started automatically.");
-            }).catch(error => {
-                console.log("Autoplay blocked, waiting for user interaction.");
-                // Music will be played on first key press
+          backgroundMusic = new Audio("./music.mp3");
+          backgroundMusic.loop = true;
+          // Attempt to play music immediately (might be blocked by browser)
+          backgroundMusic
+            .play()
+            .then(() => {
+              musicPlaying = true;
+              console.log("Background music started automatically.");
+            })
+            .catch((error) => {
+              console.log("Autoplay blocked, waiting for user interaction.");
+              // Music will be played on first key press
             });
         } catch (error) {
-            console.error("Error initializing background music:", error);
-            backgroundMusic = null; // Ensure it's null if initialization failed
+          console.error("Error initializing background music:", error);
+          backgroundMusic = null; // Ensure it's null if initialization failed
         }
 
         // Add event listeners
         window.addEventListener("resize", onWindowResize);
         document.addEventListener("keydown", onKeyDown);
-        
+
         // Header controls event listeners
-        const muteButton = document.getElementById('mute-button');
+        const muteButton = document.getElementById("mute-button");
         if (muteButton && backgroundMusic) {
-            muteButton.addEventListener('click', () => {
-                backgroundMusic.muted = !backgroundMusic.muted;
-                muteButton.textContent = backgroundMusic.muted ? 'Unmute' : 'Mute';
-                // Save state to localStorage
-                localStorage.setItem('isMuted', backgroundMusic.muted ? 'true' : 'false');
-            });
+          muteButton.addEventListener("click", () => {
+            backgroundMusic.muted = !backgroundMusic.muted;
+            muteButton.textContent = backgroundMusic.muted ? "Unmute" : "Mute";
+            // Save state to localStorage
+            localStorage.setItem(
+              "isMuted",
+              backgroundMusic.muted ? "true" : "false",
+            );
+          });
         }
-        
-        const restartButton = document.getElementById('restart-button');
+
+        const restartButton = document.getElementById("restart-button");
         if (restartButton) {
-            restartButton.addEventListener('click', () => {
-                window.location.reload();
-            });
+          restartButton.addEventListener("click", () => {
+            window.location.reload();
+          });
         }
-        
+
         // Apply stored mute state
-        const storedMuteState = localStorage.getItem('isMuted');
+        const storedMuteState = localStorage.getItem("isMuted");
         if (backgroundMusic) {
-            if (storedMuteState === 'true') {
-                backgroundMusic.muted = true;
-                muteButton.textContent = 'Unmute';
-            } else {
-                backgroundMusic.muted = false;
-                muteButton.textContent = 'Mute';
-            }
+          if (storedMuteState === "true") {
+            backgroundMusic.muted = true;
+            muteButton.textContent = "Unmute";
+          } else {
+            backgroundMusic.muted = false;
+            muteButton.textContent = "Mute";
+          }
         }
 
         // Start animation loop
@@ -371,20 +393,20 @@
       // Create a new stair
       function createStair(index) {
         const isMilestone = index > 0 && index % 500 === 0;
-        
+
         // Determine if this stair *could* be moving
         let potentialMoving = index > 5 && Math.random() < 0.3 && !isMilestone;
-        
+
         // Ensure no consecutive moving stairs
         if (potentialMoving && lastStairWasMoving) {
           potentialMoving = false;
         }
-        
+
         const isMovingStair = potentialMoving;
-        
+
         // Determine stair width
         const stairWidth = isMovingStair ? 2 : 1;
-        
+
         const stairGeometry = new THREE.BoxGeometry(stairWidth, 0.15, 0.5);
 
         // Different color for different types of stairs
@@ -392,11 +414,11 @@
         if (isMilestone) {
           stairMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 }); // Gold
         } else if (isMovingStair) {
-          stairMaterial = new THREE.MeshPhongMaterial({ 
+          stairMaterial = new THREE.MeshPhongMaterial({
             color: 0xff6b6b, // Red
             shininess: 80,
             emissive: 0x992222,
-            emissiveIntensity: 0.2
+            emissiveIntensity: 0.2,
           });
         } else {
           stairMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc }); // Regular gray
@@ -411,12 +433,13 @@
           stair.userData.isMilestone = true;
           stair.userData.milestoneNumber = index;
         }
-        
+
         // For moving stairs, add movement properties
         if (isMovingStair) {
           stair.userData.isMoving = true;
           // Speed doubled again (range 0.75 to 1.25)
-          stair.userData.moveSpeed = (Math.random() * 0.5 + 0.75) * (Math.random() < 0.5 ? 1 : -1); 
+          stair.userData.moveSpeed =
+            (Math.random() * 0.5 + 0.75) * (Math.random() < 0.5 ? 1 : -1);
           stair.userData.moveRange = Math.random() * 2.0 + 1.5; // Range of 1.5 to 3.5 units
           stair.userData.originalX = stair.position.x;
           stair.userData.timeOffset = Math.random() * Math.PI * 2; // Random starting position in the cycle
@@ -540,19 +563,19 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
-      
+
       // Check if player is supported by a stair
       function checkPlayerSupport() {
         if (isMoving || isGameOver || isFalling) return; // Skip check if moving, falling, or game over
 
         // Calculate the expected height of the stair the player should be on
         // Player center is 0.4 units above the stair surface
-        const expectedStairY = player.position.y - 0.4; 
+        const expectedStairY = player.position.y - 0.4;
         const playerX = player.position.x;
-        
+
         let isSupported = false;
         let supportingStair = null;
-        
+
         // Find the stair closest to the player's expected Y level
         for (const stair of stairs) {
           // Check if this stair is at the right height (within a small threshold)
@@ -566,41 +589,48 @@
             }
           }
         }
-        
+
         // If player is not supported, start falling
         if (!isSupported) {
-          console.log(`Falling started at Y: ${player.position.y}, expected stair Y: ${expectedStairY}`);
+          console.log(
+            `Falling started at Y: ${player.position.y}, expected stair Y: ${expectedStairY}`,
+          );
           startFalling();
         }
       }
-      
+
       // Start player falling
       function startFalling() {
         if (isFalling || isGameOver) return;
-        
+
         isFalling = true;
         fallSpeed = 0;
       }
-      
+
       // Update player falling
       function updateFalling() {
         if (!isFalling) return;
-        
+
         // Increase fall speed (gravity)
         fallSpeed += 0.01;
-        
+
         // Move player down
         player.position.y -= fallSpeed;
-        
+
         // Update camera to follow player
         camera.position.y -= fallSpeed;
-        camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z - 2);
-        
+        camera.lookAt(
+          player.position.x,
+          player.position.y + 0.5,
+          player.position.z - 2,
+        );
+
         // Update player light position
         updatePlayerLight();
-        
+
         // If player falls too far below the current step level, trigger game over
-        if (player.position.y < (currentStep * 0.2 + 0.4) - 3) { // Allow falling a bit below current step
+        if (player.position.y < currentStep * 0.2 + 0.4 - 3) {
+          // Allow falling a bit below current step
           gameOver();
           isFalling = false;
         }
@@ -615,28 +645,28 @@
         ];
         return colors[Math.floor(Math.random() * colors.length)];
       }
-      
+
       // Trigger game over
       function gameOver() {
         if (isGameOver) return;
-        
+
         isGameOver = true;
         isFalling = false; // Stop falling logic
-        
+
         // Show game over UI
         document.getElementById("game-over").style.opacity = "1";
         document.getElementById("restart-message").style.opacity = "1";
-        
+
         // Change player color to indicate failure
         player.material.color.setHex(0xff0000);
-        
+
         console.log("Game over triggered! Press SPACE to restart.");
       }
 
       // Move player up the stairs
       function moveUp() {
         if (isMoving || isGameOver || isFalling) return;
-        
+
         isMoving = true;
 
         const previousStep = currentStep;
@@ -649,11 +679,11 @@
 
           // Apply glow effect to counter
           const counterDiv = document.getElementById("counter");
-          counterDiv.classList.add('counter-glow');
+          counterDiv.classList.add("counter-glow");
 
           // Remove glow after a short time
           setTimeout(() => {
-            counterDiv.classList.remove('counter-glow');
+            counterDiv.classList.remove("counter-glow");
           }, 1500);
         }
 
@@ -667,17 +697,21 @@
 
         // Get the next stair we're moving to
         const nextStairY = currentStep * 0.2;
-        const nextStair = stairs.find(s => Math.abs(s.position.y - nextStairY) < 0.01);
-        
+        const nextStair = stairs.find(
+          (s) => Math.abs(s.position.y - nextStairY) < 0.01,
+        );
+
         // Check if the stair is a moving stair and if the player will land on it
         if (nextStair && nextStair.userData.isMoving) {
           // Calculate distance between player and stair in X axis
           const distanceX = Math.abs(player.position.x - nextStair.position.x);
           const halfWidth = nextStair.geometry.parameters.width / 2;
-          
+
           // If player is not aligned with the moving stair, game over
-          if (distanceX > halfWidth) { 
-            console.log(`Missed moving stair! Player X: ${player.position.x.toFixed(2)}, Stair X: ${nextStair.position.x.toFixed(2)}, HalfWidth: ${halfWidth.toFixed(2)}, Distance: ${distanceX.toFixed(2)}`);
+          if (distanceX > halfWidth) {
+            console.log(
+              `Missed moving stair! Player X: ${player.position.x.toFixed(2)}, Stair X: ${nextStair.position.x.toFixed(2)}, HalfWidth: ${halfWidth.toFixed(2)}, Distance: ${distanceX.toFixed(2)}`,
+            );
             // Initiate fall from the missed step height
             player.position.y = currentStep * 0.2 + 0.4;
             startFalling();
@@ -705,7 +739,7 @@
 
         function step() {
           if (isGameOver) return; // Stop animation if game over
-          
+
           const elapsed = Date.now() - startTime;
           const progress = Math.min(elapsed / duration, 1);
 
@@ -753,12 +787,15 @@
       // Update moving stairs
       function updateMovingStairs() {
         const time = Date.now() * 0.001;
-        
-        stairs.forEach(stair => {
+
+        stairs.forEach((stair) => {
           if (stair.userData.isMoving) {
             // Calculate sine wave movement
-            const offset = Math.sin(time * Math.abs(stair.userData.moveSpeed) + stair.userData.timeOffset) 
-                          * stair.userData.moveRange;
+            const offset =
+              Math.sin(
+                time * Math.abs(stair.userData.moveSpeed) +
+                  stair.userData.timeOffset,
+              ) * stair.userData.moveRange;
             stair.position.x = stair.userData.originalX + offset;
           }
         });
@@ -879,13 +916,13 @@
 
         // Update moving stairs
         updateMovingStairs();
-        
+
         // Check if player is supported by a stair
         checkPlayerSupport();
-        
+
         // Update falling if player is falling
         updateFalling();
-        
+
         // Update player light position
         updatePlayerLight();
 
