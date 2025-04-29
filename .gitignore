@@ -45,3 +45,4 @@ env/
 .env*
 code_dump_*.txt
 *.zip
+export_*
