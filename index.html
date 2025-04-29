@@ -129,6 +129,7 @@
       let fallSpeed = 0; // Player fall speed
       let isFalling = false; // Track if player is falling
       let lastStairWasMoving = false; // Track if the previous stair was moving
+      let backgroundMusic = null; // Variable for background music
       
       // Handle keyboard input
       function onKeyDown(event) {
@@ -150,6 +151,17 @@
             document.getElementById("counter").style.opacity = 1;
             // Hide instructions
             document.getElementById("instructions").style.opacity = 0;
+            
+            // Attempt to play background music on first interaction
+            if (backgroundMusic) {
+              try {
+                backgroundMusic.play();
+                console.log("Background music started.");
+              } catch (error) {
+                console.error("Could not play background music:", error);
+                // Game continues without music
+              }
+            }
           }
           moveUp();
         }
@@ -261,6 +273,15 @@
         // Create more initial floating objects (Reverted to original amount)
         for (let i = 0; i < 100; i++) {
           createFloatingObject();
+        }
+        
+        // Initialize background music
+        try {
+            backgroundMusic = new Audio('./music.mp3');
+            backgroundMusic.loop = true;
+        } catch (error) {
+            console.error("Error initializing background music:", error);
+            backgroundMusic = null; // Ensure it's null if initialization failed
         }
 
         // Add event listeners

@@ -9,4 +9,4 @@ Stairs was built using the methodology of [Vibe Coding](https://en.wikipedia.org
 
 This game was inspired by the video, [Games that Don't Fake the Space](https://www.youtube.com/watch?v=Q85l1Fenc5w).
 
-Also the music is from [this](https://www.youtube.com/watch?v=ad0a6TiuTnU) YouTube video.
+Also the music is from [this](https://www.youtube.com/watch?v=CeyIAgXeIL0) YouTube video. It was downloaded using yt-dlp and the segment of it was grabbed using ffmpeg.
