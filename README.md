@@ -1,5 +1,8 @@
 <div align="center">
   <img src="./icon.png" width="300"/>
+</div>
+
+<div align="center">
   <h1>Stairs</h1>
 </div>
 
