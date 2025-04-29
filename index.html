@@ -147,7 +147,7 @@
       <div id="counter">0</div>
       <div id="milestone"></div>
       <div id="instructions" class="instructions">
-        Use arrow keys or WASD to climb
+        Hit up arrow, w key, or tap the screen to climb!
       </div>
       <div id="game-over">GAME OVER</div>
       <div id="restart-message">Press SPACE to restart</div>
@@ -388,7 +388,17 @@
 
       // Handle touch input for mobile
       function onTouchStart(event) {
-        // Prevent default touch behavior like scrolling
+        // Check if the touch target is inside the header controls
+        const targetElement = event.target;
+        if (
+          targetElement.classList.contains("control-button") ||
+          targetElement.closest("#header-controls")
+        ) {
+          // Allow default behavior for buttons (click/navigation)
+          return;
+        }
+
+        // Prevent default touch behavior like scrolling *only if* not a control
         event.preventDefault();
 
         if (isGameOver) {
