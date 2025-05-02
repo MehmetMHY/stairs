@@ -154,7 +154,7 @@
         Hit up arrow, w key, or tap the screen to climb!
       </div>
       <div id="game-over">GAME OVER</div>
-      <div id="restart-message">Press SPACE to restart</div>
+      <div id="restart-message">Press UP/W or Tap to restart</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -180,11 +180,17 @@
       // Handle keyboard input
       function onKeyDown(event) {
         if (isGameOver) {
-          // If game over, only allow restart
-          if (event.code === "Space") {
+          // If game over, allow restart with movement keys
+          if (
+            event.key === "ArrowUp" ||
+            event.key === "w" ||
+            event.key === "W"
+          ) {
             window.location.reload(); // Force complete page reload
             return;
           }
+          // Ignore other keys when game over
+          return;
         }
 
         if (isMoving || isFalling) return;
@@ -406,8 +412,8 @@
         event.preventDefault();
 
         if (isGameOver) {
-          // Optional: Could trigger reload on tap when game over
-          // window.location.reload();
+          // Restart on tap when game over
+          window.location.reload();
           return;
         }
 
@@ -718,12 +724,14 @@
 
         // Show game over UI
         document.getElementById("game-over").style.opacity = "1";
-        document.getElementById("restart-message").style.opacity = "1";
+        const restartMsg = document.getElementById("restart-message");
+        restartMsg.textContent = "Press UP/W or Tap to restart"; // Update restart message
+        restartMsg.style.opacity = "1";
 
         // Change player color to indicate failure
         player.material.color.setHex(0xff0000);
 
-        console.log("Game over triggered! Press SPACE to restart.");
+        console.log("Game over triggered! Press UP/W or Tap to restart.");
       }
 
       // Move player up the stairs
