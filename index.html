@@ -896,6 +896,15 @@
       //                             MAIN LOOP
       /* -----------------------------------------------------------*/
       function animate() {
+        // Anti-cheat: Force ending if step count is artificially inflated
+        if (START_DISPLAY_STEP + currentStep >= FINAL_STEP && !isEnding) {
+          triggerEndingSequence();
+          // No need to continue the rest of the loop for this frame
+          // Render once more to reflect immediate state change if needed
+          renderer.render(scene, camera);
+          return;
+        }
+
         animationId = requestAnimationFrame(animate);
         sun.position.x = 15 * Math.cos(performance.now() * 0.0001);
         sun.position.z = 15 * Math.sin(performance.now() * 0.0001);
