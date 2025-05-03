@@ -107,6 +107,22 @@
         pointer-events: none;
         transition: opacity 0.5s;
       }
+      #ending-text {
+        position: absolute;
+        top: 25%; /* Slightly higher to avoid intersection */
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 28px; /* Slightly larger */
+        text-shadow: 0 0 8px #000; /* Enhance shadow slightly */
+        z-index: 100;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 1s; /* Adjust fade-in */
+        width: 80%; /* Ensure text wraps if needed */
+        line-height: 1.5; /* Spacing between lines */
+      }
       #header-controls {
         position: absolute;
         top: 20px;
@@ -155,12 +171,16 @@
       </div>
       <div id="game-over">GAME OVER</div>
       <div id="restart-message">Press UP/W or Tap to restart</div>
+      <div id="ending-text"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+      // Silence all console.log statements in production mode
+      console.log = function () {};
+
       // Game variables
-      let currentStep = 0;
+      let currentStep = 999995;
       let camera, scene, renderer;
       let player,
         stairs = [];
@@ -176,9 +196,21 @@
       let lastStairWasMoving = false; // Track if the previous stair was moving
       let backgroundMusic = null; // Variable for background music
       let musicPlaying = false; // Track if music is currently intended to play
+      let endingMusic = null; // Variable for ending music
+      let isEnding = false; // Flag for ending sequence
+      let canRestartAfterEnding = false; // Flag to allow restart after delay
+      let endingTimeoutId = null; // ID for the ending delay timeout
 
       // Handle keyboard input
       function onKeyDown(event) {
+        if (isEnding) {
+          // Allow restart only after the delay
+          if (canRestartAfterEnding) {
+            window.location.reload();
+          }
+          return; // Ignore keys during ending (before delay)
+        }
+
         if (isGameOver) {
           // If game over, allow restart with movement keys
           if (
@@ -227,7 +259,7 @@
       function init() {
         // Reset game state
         isGameOver = false;
-        currentStep = 0;
+        currentStep = 999995;
         stairs = [];
         floatingObjects = [];
         hasStartedMoving = false;
@@ -244,6 +276,7 @@
         // Hide game over UI
         document.getElementById("game-over").style.opacity = "0";
         document.getElementById("restart-message").style.opacity = "0";
+        document.getElementById("ending-text").style.opacity = "0";
 
         // Show instructions and title if starting fresh
         document.getElementById("instructions").style.opacity = "1";
@@ -411,6 +444,14 @@
         // Prevent default touch behavior like scrolling *only if* not a control
         event.preventDefault();
 
+        if (isEnding) {
+          // Allow restart only after the delay
+          if (canRestartAfterEnding) {
+            window.location.reload();
+          }
+          return; // Ignore taps during ending (before delay)
+        }
+
         if (isGameOver) {
           // Restart on tap when game over
           window.location.reload();
@@ -492,6 +533,11 @@
         const stair = new THREE.Mesh(stairGeometry, stairMaterial);
         stair.position.set(0, index * 0.2, -index * 0.5);
 
+        // Explicitly mark the final step
+        if (index === 1000000) {
+          stair.userData.isFinalStep = true;
+        }
+
         // For milestone stairs, create a text marker
         if (isMilestone) {
           // Create invisible marker for milestone reference
@@ -516,12 +562,19 @@
         scene.add(stair);
         stairs.push(stair);
 
-        // Remove old stairs when we have too many
+        // Remove old stairs when we have too many, BUT NEVER remove the final step
         if (stairs.length > 30) {
-          const oldStair = stairs.shift();
-          scene.remove(oldStair);
-          oldStair.geometry.dispose();
-          oldStair.material.dispose();
+          const oldestStair = stairs[0]; // Check the oldest stair *before* removing
+          // Only remove if it's NOT the marked final step
+          if (!(oldestStair && oldestStair.userData.isFinalStep === true)) {
+            const removedStair = stairs.shift(); // Perform the removal
+            if (removedStair) {
+              // Ensure it exists before removing from scene
+              scene.remove(removedStair);
+              removedStair.geometry.dispose();
+              removedStair.material.dispose();
+            }
+          }
         }
       }
 
@@ -713,7 +766,7 @@
 
       // Trigger game over
       function gameOver() {
-        if (isGameOver) return;
+        if (isGameOver || isEnding) return; // Don't trigger if ending sequence is active
 
         isGameOver = true;
         isFalling = false; // Stop falling logic
@@ -732,7 +785,14 @@
 
       // Move player up the stairs
       function moveUp() {
-        if (isMoving || isGameOver || isFalling) return;
+        if (isMoving || isGameOver || isFalling || isEnding) return;
+
+        // Check for ending condition
+        if (currentStep === 999999) {
+          // Land on step 1,000,000 then trigger ending
+          triggerEndingSequence();
+          return;
+        }
 
         isMoving = true;
 
@@ -754,10 +814,12 @@
           }, 1500);
         }
 
-        // Create new stairs as needed
-        createStair(currentStep + 9);
+        // Create new stairs as needed *unless* we are approaching the very end
+        if (currentStep + 9 <= 1000000) {
+          createStair(currentStep + 9);
+        }
 
-        // Create new floating objects as we climb (Reverted to original amount)
+        // Create new floating objects as we climb
         for (let i = 0; i < 5; i++) {
           createFloatingObject();
         }
@@ -977,6 +1039,16 @@
       function animate() {
         animationId = requestAnimationFrame(animate);
 
+        // If in ending sequence, only run essential updates
+        if (isEnding) {
+          // Optional: Update floating objects or sun for ambiance?
+          // updateFloatingObjects();
+          // sun.position.x = 15 * Math.cos(Date.now() * 0.0001);
+          // sun.position.z = 15 * Math.sin(Date.now() * 0.0001);
+          renderer.render(scene, camera);
+          return; // Skip normal game logic
+        }
+
         // Sun rotation effect (slow)
         sun.position.x = 15 * Math.cos(Date.now() * 0.0001);
         sun.position.z = 15 * Math.sin(Date.now() * 0.0001);
@@ -1007,6 +1079,184 @@
         }
 
         renderer.render(scene, camera);
+      }
+
+      // *** NEW FUNCTION: Trigger the ending sequence ***
+      function triggerEndingSequence() {
+        if (isEnding) return;
+        console.log("Ending sequence triggered!");
+        isEnding = true;
+        isMoving = false;
+        isFalling = false;
+        isGameOver = false; // Ensure normal game over state is off
+
+        // Finalize player on the millionth step
+        if (currentStep === 999999) {
+          currentStep = 1000000;
+          // Move player to the millionth step coordinates instantly
+          player.position.y = currentStep * 0.2 + 0.4; // 0.4 offset
+          player.position.z = -currentStep * 0.5;
+          camera.position.y = player.position.y + 0.6; // keep camera relative
+          camera.position.z = player.position.z + 3; // maintain distance
+          camera.lookAt(
+            player.position.x,
+            player.position.y + 0.5,
+            player.position.z - 2,
+          );
+          updatePlayerLight();
+        }
+
+        // --- Definitive Stair Cleanup: Keep only the MARKED final step ---
+        let finalStair = null;
+
+        // Find the marked final step
+        for (const stair of stairs) {
+          if (stair && stair.userData.isFinalStep === true) {
+            finalStair = stair;
+            break;
+          }
+        }
+
+        // Remove ALL stairs currently in the scene
+        // Iterate through a *copy* of the array to avoid issues while modifying scene
+        [...stairs].forEach((stair) => {
+          if (stair) {
+            scene.remove(stair);
+            // Optional dispose
+            // stair.geometry.dispose();
+            // stair.material.dispose();
+          }
+        });
+
+        // Clear the stairs array completely
+        stairs = [];
+
+        if (!finalStair) {
+          // Create a simple final stair if it was never generated
+          const stairGeom = new THREE.BoxGeometry(1, 0.15, 0.5);
+          const stairMat = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+          finalStair = new THREE.Mesh(stairGeom, stairMat);
+          finalStair.position.set(
+            0,
+            currentStep * 0.2 + 0.4,
+            -currentStep * 0.5,
+          );
+          finalStair.userData.isFinalStep = true;
+        }
+
+        // Add the final stair back to scene/array
+        scene.add(finalStair);
+        stairs.push(finalStair);
+
+        // Hide regular UI elements
+        document.getElementById("counter").style.opacity = 0;
+        document.getElementById("milestone").style.opacity = 0;
+        document.getElementById("game-over").style.opacity = 0;
+        document.getElementById("restart-message").style.opacity = 0;
+
+        // Stop regular music
+        if (backgroundMusic && musicPlaying) {
+          backgroundMusic.pause();
+          musicPlaying = false;
+        }
+
+        // Load and play ending music
+        try {
+          endingMusic = new Audio("./end.mp3");
+          endingMusic.loop = false; // Play only once? Or loop?
+          endingMusic
+            .play()
+            .catch((e) => console.error("Ending music play error:", e));
+          // Update mute button to control ending music
+          const muteButton = document.getElementById("mute-button");
+          if (muteButton) {
+            muteButton.onclick = () => {
+              // Replace previous listener
+              endingMusic.muted = !endingMusic.muted;
+              muteButton.textContent = endingMusic.muted ? "Unmute" : "Mute";
+              // You might want to store this mute state too
+            };
+            // Apply current mute state if main music was muted
+            if (backgroundMusic && backgroundMusic.muted) {
+              endingMusic.muted = true;
+              muteButton.textContent = "Unmute";
+            }
+          }
+        } catch (error) {
+          console.error("Error initializing ending music:", error);
+          endingMusic = null;
+        }
+
+        // Animate player falling into the void
+        const fallStartTime = Date.now();
+        const fallDuration = 3000; // 3 seconds to fall
+        const fallDistance = 80; // Keep the deeper fall for now
+        const startY = player.position.y;
+        const startCamY = camera.position.y;
+        const targetY = startY - fallDistance;
+        const targetCamY = startCamY - fallDistance;
+
+        function fallAnimation() {
+          if (!isEnding) return; // Stop if ending is somehow cancelled
+
+          const elapsed = Date.now() - fallStartTime;
+          const progress = Math.min(elapsed / fallDuration, 1);
+          const easedProgress = progress * progress; // Ease-in effect
+
+          player.position.y = startY + (targetY - startY) * easedProgress;
+          camera.position.y =
+            startCamY + (targetCamY - startCamY) * easedProgress;
+          camera.lookAt(
+            player.position.x,
+            player.position.y,
+            player.position.z,
+          );
+          updatePlayerLight(); // Keep light with player
+
+          // Fade scene to black
+          const black = new THREE.Color(0x000000);
+          scene.fog.color.lerp(black, easedProgress * 0.1); // Gradual fade
+          renderer.setClearColor(scene.fog.color);
+
+          if (progress < 1) {
+            requestAnimationFrame(fallAnimation);
+          } else {
+            // Fall animation finished, player remains
+
+            // Show ending text with typewriter effect
+            showEndingText();
+          }
+        }
+        requestAnimationFrame(fallAnimation);
+      }
+
+      // *** NEW FUNCTION: Display ending text slowly ***
+      function showEndingText() {
+        const endingTextDiv = document.getElementById("ending-text");
+        endingTextDiv.innerHTML = ""; // Clear previous text
+        endingTextDiv.style.opacity = 1; // Make sure div is visible
+
+        // Combined single line text
+        const fullText =
+          "So, you made it… or have you? The world still waits, teeth bared, and life slithers on, dragging you back into its gnawing grasp. This was no true escape, only a thin veil torn away, making the lurking horrors pulse sharper in the gloom. You have squandered precious hours, and now your suffering festers. Deeper, hungrier, impossible to outrun. What will you do now child?";
+
+        const charDelay = 160; // Reset slower typing speed
+
+        let charIndex = 0;
+
+        function typeCharacter() {
+          if (charIndex < fullText.length) {
+            endingTextDiv.innerHTML += fullText[charIndex];
+            charIndex++;
+            setTimeout(typeCharacter, charDelay);
+          } else {
+            // All text revealed; allow restart now
+            canRestartAfterEnding = true;
+          }
+        }
+
+        // Start the typing effect after a short delay
+        setTimeout(typeCharacter, 500);
       }
 
       // Start the game

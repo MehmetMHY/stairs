@@ -16,6 +16,8 @@ This game was inspired by the video, [Games that Don't Fake the Space](https://w
 
 The music in this game is from a YouTuber named [NyxVox](https://www.youtube.com/@NyxVox). Specially [this](https://www.youtube.com/watch?v=CeyIAgXeIL0) video by **NyxVox**. The first 3 minutes and 26 seconds were used in this game.
 
+The **\_** music was from one of **Fear & Hunger** game's OST which I grabbed from [this](https://www.youtube.com/watch?v=Bg3rsQ0yDRI) YouTube video. Massive credits goes to them.
+
 ## Tech
 
 - [HTML](https://developer.mozilla.org/en-US/docs/Web/HTML) (v5)
