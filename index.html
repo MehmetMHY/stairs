@@ -180,7 +180,7 @@
       console.log = function () {};
 
       // Game variables
-      let currentStep = 999995;
+      let currentStep = 999985;
       let camera, scene, renderer;
       let player,
         stairs = [];
@@ -259,7 +259,7 @@
       function init() {
         // Reset game state
         isGameOver = false;
-        currentStep = 999995;
+        currentStep = 999985;
         stairs = [];
         floatingObjects = [];
         hasStartedMoving = false;
@@ -505,7 +505,8 @@
         const isMilestone = index > 0 && index % 500 === 0;
 
         // Determine if this stair *could* be moving
-        let potentialMoving = index > 5 && Math.random() < 0.3 && !isMilestone;
+        let potentialMoving =
+          index > 5 && index < 999990 && Math.random() < 0.3 && !isMilestone;
 
         // Ensure no consecutive moving stairs
         if (potentialMoving && lastStairWasMoving) {
@@ -533,7 +534,7 @@
         const stair = new THREE.Mesh(stairGeometry, stairMaterial);
         stair.position.set(0, index * 0.2, -index * 0.5);
 
-        // Explicitly mark the final step
+        // Explicitly mark the final step - Restored
         if (index === 1000000) {
           stair.userData.isFinalStep = true;
         }
@@ -686,6 +687,11 @@
       function checkPlayerSupport() {
         if (isMoving || isGameOver || isFalling) return; // Skip check if moving, falling, or game over
 
+        // SAFETY MEASURE: Skip support check if near the end (from 999990+)
+        if (window.safeNearEnd) {
+          return;
+        }
+
         // Calculate the expected height of the stair the player should be on
         // Player center is 0.4 units above the stair surface
         const expectedStairY = player.position.y - 0.4;
@@ -800,6 +806,37 @@
         currentStep++;
         document.getElementById("counter").textContent = `${currentStep}`;
 
+        // SAFETY MEASURE: Near the end, ensure we can't die
+        const isNearEnd = currentStep >= 999990;
+
+        // Log debug info for the problematic step
+        if (currentStep === 999995 || currentStep === 999996) {
+          console.warn(`Debug at step ${currentStep}:`);
+
+          // Find the next stair the player would land on
+          const nextStairY = currentStep * 0.2;
+          const nextStair = stairs.find(
+            (s) => Math.abs(s.position.y - nextStairY) < 0.01,
+          );
+
+          // Log details about that stair
+          if (nextStair) {
+            console.warn(
+              `Next stair exists at Y=${nextStair.position.y.toFixed(2)}, X=${nextStair.position.x.toFixed(2)}`,
+            );
+            console.warn(
+              `Is moving: ${nextStair.userData.isMoving ? "YES" : "NO"}`,
+            );
+            if (nextStair.userData.isMoving) {
+              console.warn(
+                `Move speed: ${nextStair.userData.moveSpeed}, range: ${nextStair.userData.moveRange}`,
+              );
+            }
+          } else {
+            console.warn(`WARNING: No stair found at expected Y=${nextStairY}`);
+          }
+        }
+
         // Handle 100 step milestone
         if (currentStep % 100 === 0) {
           player.material.color.setHex(getRandomColor());
@@ -814,10 +851,8 @@
           }, 1500);
         }
 
-        // Create new stairs as needed *unless* we are approaching the very end
-        if (currentStep + 9 <= 1000000) {
-          createStair(currentStep + 9);
-        }
+        // Create new stairs as needed - Reverted: Removed the limit
+        createStair(currentStep + 9);
 
         // Create new floating objects as we climb
         for (let i = 0; i < 5; i++) {
@@ -836,8 +871,16 @@
           const distanceX = Math.abs(player.position.x - nextStair.position.x);
           const halfWidth = nextStair.geometry.parameters.width / 2;
 
-          // If player is not aligned with the moving stair, game over
-          if (distanceX > halfWidth) {
+          // SAFETY MEASURE: If near the end, force alignment with the stair
+          if (isNearEnd) {
+            // Force player to land on the stair even if it's moving
+            player.position.x = nextStair.position.x;
+            console.warn(
+              `Forced alignment at step ${currentStep}, X=${nextStair.position.x.toFixed(2)}`,
+            );
+          }
+          // Only check for missing the stair if not in the safety zone
+          else if (distanceX > halfWidth) {
             console.log(
               `Missed moving stair! Player X: ${player.position.x.toFixed(2)}, Stair X: ${nextStair.position.x.toFixed(2)}, HalfWidth: ${halfWidth.toFixed(2)}, Distance: ${distanceX.toFixed(2)}`,
             );
@@ -848,6 +891,10 @@
             return;
           }
         }
+
+        // Also add safety to checkPlayerSupport to prevent falling near the end
+        // This is temporary until we pinpoint the exact cause
+        window.safeNearEnd = isNearEnd;
 
         // Animate the movement
         const targetY = player.position.y + 0.2;
@@ -1090,26 +1137,9 @@
         isFalling = false;
         isGameOver = false; // Ensure normal game over state is off
 
-        // Finalize player on the millionth step
-        if (currentStep === 999999) {
-          currentStep = 1000000;
-          // Move player to the millionth step coordinates instantly
-          player.position.y = currentStep * 0.2 + 0.4; // 0.4 offset
-          player.position.z = -currentStep * 0.5;
-          camera.position.y = player.position.y + 0.6; // keep camera relative
-          camera.position.z = player.position.z + 3; // maintain distance
-          camera.lookAt(
-            player.position.x,
-            player.position.y + 0.5,
-            player.position.z - 2,
-          );
-          updatePlayerLight();
-        }
-
-        // --- Definitive Stair Cleanup: Keep only the MARKED final step ---
-        let finalStair = null;
-
+        // --- Reverted Ending Sequence Logic ---
         // Find the marked final step
+        let finalStair = null;
         for (const stair of stairs) {
           if (stair && stair.userData.isFinalStep === true) {
             finalStair = stair;
@@ -1118,7 +1148,6 @@
         }
 
         // Remove ALL stairs currently in the scene
-        // Iterate through a *copy* of the array to avoid issues while modifying scene
         [...stairs].forEach((stair) => {
           if (stair) {
             scene.remove(stair);
@@ -1131,22 +1160,37 @@
         // Clear the stairs array completely
         stairs = [];
 
+        // If finalStair wasn't found by flag, create a fallback
+        // (Using original color and less precise positioning as per revert state)
         if (!finalStair) {
-          // Create a simple final stair if it was never generated
+          console.warn("Final step was not found/marked, creating fallback.");
           const stairGeom = new THREE.BoxGeometry(1, 0.15, 0.5);
           const stairMat = new THREE.MeshLambertMaterial({ color: 0xcccccc });
           finalStair = new THREE.Mesh(stairGeom, stairMat);
-          finalStair.position.set(
-            0,
-            currentStep * 0.2 + 0.4,
-            -currentStep * 0.5,
-          );
+          // Position based on currentStep which should be 1000000 here
+          finalStair.position.set(0, 1000000 * 0.2, -1000000 * 0.5);
           finalStair.userData.isFinalStep = true;
         }
 
         // Add the final stair back to scene/array
         scene.add(finalStair);
         stairs.push(finalStair);
+
+        // Ensure player is positioned correctly on the final step
+        // Reverted: Use the position of the found/created finalStair
+        player.position.set(
+          0,
+          finalStair.position.y + 0.4,
+          finalStair.position.z,
+        );
+        camera.position.y = player.position.y + 0.6;
+        camera.position.z = player.position.z + 3;
+        camera.lookAt(
+          player.position.x,
+          player.position.y + 0.5,
+          player.position.z - 2,
+        );
+        updatePlayerLight();
 
         // Hide regular UI elements
         document.getElementById("counter").style.opacity = 0;
