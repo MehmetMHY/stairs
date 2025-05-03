@@ -483,12 +483,8 @@
         if (isMilestone) {
           stairMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 }); // Gold
         } else if (isMovingStair) {
-          stairMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff6b6b, // Red
-            shininess: 80,
-            emissive: 0x992222,
-            emissiveIntensity: 0.2,
-          });
+          // Use the same material as regular stairs
+          stairMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc }); // Regular gray
         } else {
           stairMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc }); // Regular gray
         }
