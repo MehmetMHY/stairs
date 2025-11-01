@@ -27,3 +27,7 @@ The main music in this game is from a YouTuber named [NyxVox](https://www.youtub
 ## Practice
 
 Stairs was built using the methodology of [Vibe Coding](https://en.wikipedia.org/wiki/Vibe_coding), meaning this code was entirely written using AI, where the human only made requests and handled version control, through [git](https://git-scm.com/) & [GitHub](https://github.com/) for the project. The code was mainly written by `Claude Sonnet 3.7` and `Gemini 2.5 Pro`, but parts of it were written/refined with o3, `gpt-4o`, and `gpt-4.1`. The game's icon was generated using OpenAI's `gpt-4o image model` with OpenAI's [ChatGPT](https://chat.openai.com/chat) web app and [Gemini 2.5 Flash Image (Nano Banana)](https://aistudio.google.com/models/gemini-2-5-flash-image). These models were utilized through Anthropic's [Claude](https://claude.ai/new) web app, the [Cursor IDE](https://www.cursor.com/), and [Cha](https://github.com/MehmetMHY/cha/). The music was extracted from [YouTube](https://www.youtube.com/) were [yt-dlp](https://github.com/yt-dlp/yt-dlp) was used to download the audio and that audio was segmented/clipped using [ffmpeg](https://ffmpeg.org/).
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](./LICENSE).
